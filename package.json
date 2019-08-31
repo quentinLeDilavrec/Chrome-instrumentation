@@ -1,0 +1,25 @@
+{
+  "name": "start-instrumented-chrome",
+  "version": "1.0.0",
+  "description": "start a chrome instance instrumented with puppeteer",
+  "main": "script.ts",
+  "scripts": {
+    "start": "npm run build && node out/script.js",
+    "no-sandbox": "npm run build && node out/script.js --no-sandbox",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc -p ."
+  },
+  "author": "quentin le dilavrec",
+  "dependencies": {
+    "@babel/traverse": "^7.4.4",
+    "@babel/types": "^7.4.4",
+    "@types/babel__core": "^7.1.2",
+    "puppeteer": "^1.17.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.4.4",
+    "@babel/node": "^7.2.2",
+    "@types/puppeteer": "^1.12.4",
+    "typescript": "^3.4.5"
+  }
+}
