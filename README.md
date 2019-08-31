@@ -1,2 +1,2 @@
 # Chrome-instrumentation
-launch a chrome browser instrumented for behavior analysis
+Launch a chrome browser instrumented for behavior analysis
