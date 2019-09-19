@@ -2,7 +2,7 @@
   "name": "chrome-instrumentation",
   "version": "1.0.0",
   "description": "start a chrome instance instrumented with puppeteer",
-  "main": "out/script.ts",
+  "main": "out/script.js",
   "scripts": {
     "start": "npm run compile && node out/script.js",
     "no-sandbox": "npm run compile && node out/script.js --no-sandbox",
