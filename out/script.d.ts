@@ -1,1 +1,1 @@
-export declare function launchBrowser(): Promise<void>;
+export declare function launchBrowser(start_page?: string): Promise<void>;

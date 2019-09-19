@@ -12,7 +12,8 @@ const puppeteer = require("puppeteer");
 const fs = require("fs");
 const core_1 = require("@babel/core");
 const instrumentation_1 = require("./instrumentation");
-const babel_js_src = fs.readFileSync("../babel.js", 'utf8');
+const path_1 = require("path");
+const babel_js_src = fs.readFileSync(path_1.join(__dirname, "../babel.js"), 'utf8');
 function _MO_instantiator(instrumenter_container_str) {
     const binding = window['logger'];
     window["global"] = {};
@@ -280,7 +281,7 @@ function instrument_fetch(page, apply_babel = false) {
     });
 }
 // Main
-function launchBrowser() {
+function launchBrowser(start_page = 'about:blank') {
     return __awaiter(this, void 0, void 0, function* () {
         // instanciating browser
         const options = { headless: false, dumpio: true, pipe: false };
@@ -291,7 +292,7 @@ function launchBrowser() {
         // instanciating starting pages
         const [page] = yield browser.pages();
         yield instrument_fetch(page);
-        yield page.goto('about:blank');
+        yield page.goto(start_page);
         // await page.evaluate(function () {
         //   console.log("written in the puppeteer");
         // }).catch(function (err) { console.error(err); });

@@ -4,9 +4,10 @@ import Crdp from 'chrome-remote-debug-protocol'
 import { types as btypes, PluginObj } from "@babel/core";
 import { transformSync } from "@babel/core";
 import { instrumenter_container } from "./instrumentation";
+import { join } from "path";
 
 
-const babel_js_src = fs.readFileSync("../babel.js", 'utf8')
+const babel_js_src = fs.readFileSync(join( __dirname,"../babel.js"), 'utf8')
 
 function _MO_instantiator(instrumenter_container_str: string) {
   const binding = window['logger']
@@ -303,7 +304,7 @@ async function instrument_fetch(page: puppeteer.Page, apply_babel = false) {
 }
 
 // Main
-export async function launchBrowser() {
+export async function launchBrowser(start_page:string='about:blank') {
   // instanciating browser
   const options = { headless: false, dumpio: true, pipe: false };
   const launch_params = process.argv[2] === '--no-sandbox' ? [...puppeteer.defaultArgs(options), '--no-sandbox', '--disable-setuid-sandbox'] : puppeteer.defaultArgs(options);
@@ -313,7 +314,7 @@ export async function launchBrowser() {
   // instanciating starting pages
   const [page] = await browser.pages()
   await instrument_fetch(page)
-  await page.goto('about:blank')
+  await page.goto(start_page)
   // await page.evaluate(function () {
   //   console.log("written in the puppeteer");
   // }).catch(function (err) { console.error(err); });
