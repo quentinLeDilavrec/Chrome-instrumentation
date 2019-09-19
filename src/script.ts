@@ -242,15 +242,14 @@ async function instrument_basic(page: puppeteer.Page) {
  * replace original response with interceptions added to the functions
  * @param page the page to instrument
  */
-async function instrument_fetch(page: puppeteer.Page, apply_babel = false) {
-  page.on("popup", newpage => instrument_fetch(newpage))
+async function instrument_fetch(page: puppeteer.Page, output:string, apply_babel = false) {
+  page.on("popup", new_page => instrument_fetch(new_page,output,apply_babel))
   const client = await page.target().createCDPSession();
 
-  const dirname = '/tmp/behaviorlogs/';//require('path').join(require('os').homedir(),'/js_intercept_data/browser/v2/');
-  if (!fs.existsSync(dirname)) fs.mkdirSync(dirname);
+  if (!fs.existsSync(output)) fs.mkdirSync(output);
   //load dependency for inline scripts modification
   await page.evaluateOnNewDocument(babel_js_src)
-  const file = fs.openSync(dirname + Math.random(), 'w')
+  const file = fs.openSync(output + Math.random(), 'w')
   await page.exposeFunction("logger", function (data) {
     fs.appendFileSync(
       file,
@@ -304,7 +303,7 @@ async function instrument_fetch(page: puppeteer.Page, apply_babel = false) {
 }
 
 // Main
-export async function launchBrowser(start_page:string='about:blank') {
+export async function launchBrowser(start_page:string='about:blank',output?:string) {
   // instanciating browser
   const options = { headless: false, dumpio: true, pipe: false };
   const launch_params = process.argv[2] === '--no-sandbox' ? [...puppeteer.defaultArgs(options), '--no-sandbox', '--disable-setuid-sandbox'] : puppeteer.defaultArgs(options);
@@ -313,7 +312,7 @@ export async function launchBrowser(start_page:string='about:blank') {
   browser.on('disconnected', () => console.log('finished'))
   // instanciating starting pages
   const [page] = await browser.pages()
-  await instrument_fetch(page)
+  await instrument_fetch(page,output||(console.log("default output directory"),"/tmp/behavior_traces/default_browser/"))
   await page.goto(start_page)
   // await page.evaluate(function () {
   //   console.log("written in the puppeteer");

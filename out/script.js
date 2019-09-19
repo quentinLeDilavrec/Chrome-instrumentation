@@ -231,16 +231,15 @@ function instrument_basic(page) {
  * replace original response with interceptions added to the functions
  * @param page the page to instrument
  */
-function instrument_fetch(page, apply_babel = false) {
+function instrument_fetch(page, output, apply_babel = false) {
     return __awaiter(this, void 0, void 0, function* () {
-        page.on("popup", newpage => instrument_fetch(newpage));
+        page.on("popup", new_page => instrument_fetch(new_page, output, apply_babel));
         const client = yield page.target().createCDPSession();
-        const dirname = '/tmp/behaviorlogs/'; //require('path').join(require('os').homedir(),'/js_intercept_data/browser/v2/');
-        if (!fs.existsSync(dirname))
-            fs.mkdirSync(dirname);
+        if (!fs.existsSync(output))
+            fs.mkdirSync(output);
         //load dependency for inline scripts modification
         yield page.evaluateOnNewDocument(babel_js_src);
-        const file = fs.openSync(dirname + Math.random(), 'w');
+        const file = fs.openSync(output + Math.random(), 'w');
         yield page.exposeFunction("logger", function (data) {
             fs.appendFileSync(file, data + '\n', 'utf-8');
             fs.fdatasyncSync(file);
@@ -281,7 +280,7 @@ function instrument_fetch(page, apply_babel = false) {
     });
 }
 // Main
-function launchBrowser(start_page = 'about:blank') {
+function launchBrowser(start_page = 'about:blank', output) {
     return __awaiter(this, void 0, void 0, function* () {
         // instanciating browser
         const options = { headless: false, dumpio: true, pipe: false };
@@ -291,7 +290,7 @@ function launchBrowser(start_page = 'about:blank') {
         browser.on('disconnected', () => console.log('finished'));
         // instanciating starting pages
         const [page] = yield browser.pages();
-        yield instrument_fetch(page);
+        yield instrument_fetch(page, output || (console.log("default output directory"), "/tmp/behavior_traces/default_browser/"));
         yield page.goto(start_page);
         // await page.evaluate(function () {
         //   console.log("written in the puppeteer");
