@@ -12,7 +12,7 @@ const puppeteer = require("puppeteer");
 const fs = require("fs");
 const core_1 = require("@babel/core");
 const instrumentation_1 = require("./instrumentation");
-const babel_js_src = fs.readFileSync("babel.js", 'utf8');
+const babel_js_src = fs.readFileSync("../babel.js", 'utf8');
 function _MO_instantiator(instrumenter_container_str) {
     const binding = window['logger'];
     window["global"] = {};

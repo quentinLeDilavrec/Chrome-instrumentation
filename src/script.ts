@@ -6,7 +6,7 @@ import { transformSync } from "@babel/core";
 import { instrumenter_container } from "./instrumentation";
 
 
-const babel_js_src = fs.readFileSync("babel.js", 'utf8')
+const babel_js_src = fs.readFileSync("../babel.js", 'utf8')
 
 function _MO_instantiator(instrumenter_container_str: string) {
   const binding = window['logger']
