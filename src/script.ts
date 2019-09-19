@@ -69,7 +69,7 @@ function _MO_instantiator(instrumenter_container_str: string) {
   const myCallPrinter = (call) => {
     return '' + call[0] + (call.length > 1 ? ' ' + JSON.stringify(call.slice(1), replacer(0)) : '');
   };
-  
+
   function flush() {
     if (log.length > 0) {
       binding(log.map(myCallPrinter).join('\n'))
@@ -303,7 +303,7 @@ async function instrument_fetch(page: puppeteer.Page, apply_babel = false) {
 }
 
 // Main
-(async () => {
+export async function launchBrowser() {
   // instanciating browser
   const options = { headless: false, dumpio: true, pipe: false };
   const launch_params = process.argv[2] === '--no-sandbox' ? [...puppeteer.defaultArgs(options), '--no-sandbox', '--disable-setuid-sandbox'] : puppeteer.defaultArgs(options);
@@ -321,4 +321,8 @@ async function instrument_fetch(page: puppeteer.Page, apply_babel = false) {
   // const page2 = await browser.newPage()
   // await instrument_fetch(page2)
   // await page2.goto('file:///' + __dirname.split('/').slice(0, -1).join("/") + '/tests/basic/index.html')
-})();
+}
+
+if(typeof require != 'undefined' && require.main == module){
+  launchBrowser();
+}
