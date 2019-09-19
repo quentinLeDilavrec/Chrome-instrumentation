@@ -4,10 +4,12 @@
         "target": "es6",
         "outDir": "out",
         "jsx": "preserve",
-		"sourceMap": true,
-		"rootDir": "src",
+        "sourceMap": true,
+        "rootDir": "src",
+        "declaration": true,
     },
     "exclude": [
+        "out",
         "node_modules",
         "**/node_modules/*"
     ]

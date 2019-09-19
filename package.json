@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "start a chrome instance instrumented with puppeteer",
   "main": "out/script.js",
+  "types": "out/script.d.ts",
   "scripts": {
     "start": "npm run compile && node out/script.js",
     "no-sandbox": "npm run compile && node out/script.js --no-sandbox",
