@@ -282,22 +282,18 @@ function instrument_fetch(page, output, apply_babel = false) {
 // Main
 function launchBrowser(start_page = 'about:blank', output) {
     return __awaiter(this, void 0, void 0, function* () {
-        // instanciating browser
+        // instantiating browser
         const options = { headless: false, dumpio: true, pipe: false };
         const launch_params = process.argv[2] === '--no-sandbox' ? [...puppeteer.defaultArgs(options), '--no-sandbox', '--disable-setuid-sandbox'] : puppeteer.defaultArgs(options);
         console.log(process.argv, launch_params);
         const browser = yield puppeteer.launch(Object.assign({}, options, { args: launch_params }));
-        browser.on('disconnected', () => console.log('finished'));
-        // instanciating starting pages
+        browser.on('disconnected', () => console.log('instrumented browser session finished'));
+        // instantiating starting pages
         const [page] = yield browser.pages();
-        yield instrument_fetch(page, output || (console.log("default output directory"), "/tmp/behavior_traces/default_browser/"));
+        yield instrument_fetch(page, output
+            || (console.log("no output directory given use default output directory '/tmp/behavior_traces/default_browser/'"),
+                "/tmp/behavior_traces/default_browser/"));
         yield page.goto(start_page);
-        // await page.evaluate(function () {
-        //   console.log("written in the puppeteer");
-        // }).catch(function (err) { console.error(err); });
-        // const page2 = await browser.newPage()
-        // await instrument_fetch(page2)
-        // await page2.goto('file:///' + __dirname.split('/').slice(0, -1).join("/") + '/tests/basic/index.html')
     });
 }
 exports.launchBrowser = launchBrowser;
