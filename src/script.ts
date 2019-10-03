@@ -249,7 +249,7 @@ async function instrument_fetch(page: puppeteer.Page, output:string, apply_babel
   if (!fs.existsSync(output)) fs.mkdirSync(output);
   //load dependency for inline scripts modification
   await page.evaluateOnNewDocument(babel_js_src)
-  const file = fs.openSync(output + Math.random(), 'w')
+  const file = fs.openSync(join(output, ""+ Math.random()), 'w')
   await page.exposeFunction("logger", function (data) {
     fs.appendFileSync(
       file,
