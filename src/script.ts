@@ -7,7 +7,7 @@ import { instrumenter_container } from "./instrumentation";
 import { join } from "path";
 
 
-const babel_js_src = fs.readFileSync(join( __dirname,"../babel.js"), 'utf8')
+const babel_js_src = fs.readFileSync(join(__dirname, "../babel.js"), 'utf8')
 
 function _MO_instantiator(instrumenter_container_str: string) {
   const binding = window['logger']
@@ -242,14 +242,14 @@ async function instrument_basic(page: puppeteer.Page) {
  * replace original response with interceptions added to the functions
  * @param page the page to instrument
  */
-async function instrument_fetch(page: puppeteer.Page, output:string, apply_babel = false) {
-  page.on("popup", new_page => instrument_fetch(new_page,output,apply_babel))
+async function instrument_fetch(page: puppeteer.Page, output: string, apply_babel = false) {
+  page.on("popup", new_page => instrument_fetch(new_page, output, apply_babel))
   const client = await page.target().createCDPSession();
 
   if (!fs.existsSync(output)) fs.mkdirSync(output);
   //load dependency for inline scripts modification
   await page.evaluateOnNewDocument(babel_js_src)
-  const file = fs.openSync(join(output, ""+ Math.random()), 'w')
+  const file = fs.openSync(join(output, "" + Math.random()), 'w')
   await page.exposeFunction("logger", function (data) {
     fs.appendFileSync(
       file,
@@ -303,26 +303,23 @@ async function instrument_fetch(page: puppeteer.Page, output:string, apply_babel
 }
 
 // Main
-export async function launchBrowser(start_page:string='about:blank',output?:string) {
-  // instanciating browser
+export async function launchBrowser(start_page: string = 'about:blank', output?: string) {
+  // instantiating browser
   const options = { headless: false, dumpio: true, pipe: false };
   const launch_params = process.argv[2] === '--no-sandbox' ? [...puppeteer.defaultArgs(options), '--no-sandbox', '--disable-setuid-sandbox'] : puppeteer.defaultArgs(options);
   console.log(process.argv, launch_params);
   const browser = await puppeteer.launch({ ...options, args: launch_params })
-  browser.on('disconnected', () => console.log('finished'))
-  // instanciating starting pages
+  browser.on('disconnected', () => console.log('instrumented browser session finished'))
+  // instantiating starting pages
   const [page] = await browser.pages()
-  await instrument_fetch(page,output||(console.log("default output directory"),"/tmp/behavior_traces/default_browser/"))
+  await instrument_fetch(page,
+    output
+    || (
+      console.log("no output directory given use default output directory '/tmp/behavior_traces/default_browser/'"),
+      "/tmp/behavior_traces/default_browser/"))
   await page.goto(start_page)
-  // await page.evaluate(function () {
-  //   console.log("written in the puppeteer");
-  // }).catch(function (err) { console.error(err); });
-
-  // const page2 = await browser.newPage()
-  // await instrument_fetch(page2)
-  // await page2.goto('file:///' + __dirname.split('/').slice(0, -1).join("/") + '/tests/basic/index.html')
 }
 
-if(typeof require != 'undefined' && require.main == module){
+if (typeof require != 'undefined' && require.main == module) {
   launchBrowser();
 }
