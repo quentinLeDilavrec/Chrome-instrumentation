@@ -239,7 +239,7 @@ function instrument_fetch(page, output, apply_babel = false) {
             fs.mkdirSync(output);
         //load dependency for inline scripts modification
         yield page.evaluateOnNewDocument(babel_js_src);
-        const file = fs.openSync(output + Math.random(), 'w');
+        const file = fs.openSync(path_1.join(output, "" + Math.random()), 'w');
         yield page.exposeFunction("logger", function (data) {
             fs.appendFileSync(file, data + '\n', 'utf-8');
             fs.fdatasyncSync(file);
