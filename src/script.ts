@@ -9,7 +9,7 @@ import { join } from "path";
 
 const babel_js_src = fs.readFileSync(join(__dirname, "../babel.js"), 'utf8')
 
-function _MO_instantiator(instrumenter_container_str: string) {
+function _MO_instantiator(instrumenter_container_str: string,root_path:string="") {
   const binding = window['logger']
   window["global"] = {};
 
@@ -68,7 +68,7 @@ function _MO_instantiator(instrumenter_container_str: string) {
   const count = 2000;
 
   const myCallPrinter = (call) => {
-    return '' + call[0] + (call.length > 1 ? ' ' + JSON.stringify(call.slice(1), replacer(0)) : '');
+    return '' + call[0].slice(root_path.length) + (call.length > 1 ? ' ' + JSON.stringify(call.slice(1), replacer(0)) : '');
   };
 
   function flush() {
@@ -242,14 +242,14 @@ async function instrument_basic(page: puppeteer.Page) {
  * replace original response with interceptions added to the functions
  * @param page the page to instrument
  */
-async function instrument_fetch(root:string, page: puppeteer.Page, output: string, apply_babel = false) {
-  page.on("popup", new_page => instrument_fetch(root, new_page, output, apply_babel))
+async function instrument_fetch(root_path:string, page: puppeteer.Page, output: string, apply_babel = false) {
+  page.on("popup", new_page => instrument_fetch(root_path.substr(-1)==='/'?root_path:root_path+'/', new_page, output, apply_babel))
   const client = await page.target().createCDPSession();
 
   if (!fs.existsSync(output)) fs.mkdirSync(output);
   //load dependency for inline scripts modification
   await page.evaluateOnNewDocument(babel_js_src)
-  const file = fs.openSync(join(output,root,"browser", "" + Math.random()), 'w')
+  const file = fs.openSync(join(output, "" + Math.random()), 'w')
   await page.exposeFunction("logger", function (data) {
     fs.appendFileSync(
       file,
@@ -274,7 +274,7 @@ async function instrument_fetch(root:string, page: puppeteer.Page, output: strin
     }
   })
 
-  await page.evaluateOnNewDocument(_MO_instantiator, instrumenter_container.toString())
+  await page.evaluateOnNewDocument(_MO_instantiator, instrumenter_container.toString(),root_path)
 
   if (apply_babel) {
     await client.send('Fetch.enable', { patterns: [{ resourceType: "Script", requestStage: "Response" }] })
@@ -302,7 +302,7 @@ async function instrument_fetch(root:string, page: puppeteer.Page, output: strin
 }
 
 // Main
-export async function launchBrowser(root:string, start_page: string = 'about:blank', output?: string) {
+export async function launchBrowser(root_path:string, start_page: string = 'about:blank', output?: string) {
   // instantiating browser
   const options = { headless: false, dumpio: true, pipe: false };
   const launch_params = process.argv[2] === '--no-sandbox' ? [...puppeteer.defaultArgs(options), '--no-sandbox', '--disable-setuid-sandbox'] : puppeteer.defaultArgs(options);
@@ -311,7 +311,7 @@ export async function launchBrowser(root:string, start_page: string = 'about:bla
   browser.on('disconnected', () => console.log('instrumented browser session finished'))
   // instantiating starting pages
   const [page] = await browser.pages()
-  await instrument_fetch(root, page,
+  await instrument_fetch(root_path, page,
     output
     || (
       console.log("no output directory given use default output directory '/tmp/behavior_traces/default_browser/'"),
@@ -320,5 +320,5 @@ export async function launchBrowser(root:string, start_page: string = 'about:bla
 }
 
 if (typeof require != 'undefined' && require.main == module) {
-  launchBrowser('default');
+  launchBrowser(process.argv[1]);
 }
