@@ -242,14 +242,14 @@ async function instrument_basic(page: puppeteer.Page) {
  * replace original response with interceptions added to the functions
  * @param page the page to instrument
  */
-async function instrument_fetch(page: puppeteer.Page, output: string, apply_babel = false) {
-  page.on("popup", new_page => instrument_fetch(new_page, output, apply_babel))
+async function instrument_fetch(root:string, page: puppeteer.Page, output: string, apply_babel = false) {
+  page.on("popup", new_page => instrument_fetch(root, new_page, output, apply_babel))
   const client = await page.target().createCDPSession();
 
   if (!fs.existsSync(output)) fs.mkdirSync(output);
   //load dependency for inline scripts modification
   await page.evaluateOnNewDocument(babel_js_src)
-  const file = fs.openSync(join(output, "" + Math.random()), 'w')
+  const file = fs.openSync(join(output,root,"browser", "" + Math.random()), 'w')
   await page.exposeFunction("logger", function (data) {
     fs.appendFileSync(
       file,
@@ -298,12 +298,11 @@ async function instrument_fetch(page: puppeteer.Page, output: string, apply_babe
       })
     })
   }
-
   return client
 }
 
 // Main
-export async function launchBrowser(start_page: string = 'about:blank', output?: string) {
+export async function launchBrowser(root:string, start_page: string = 'about:blank', output?: string) {
   // instantiating browser
   const options = { headless: false, dumpio: true, pipe: false };
   const launch_params = process.argv[2] === '--no-sandbox' ? [...puppeteer.defaultArgs(options), '--no-sandbox', '--disable-setuid-sandbox'] : puppeteer.defaultArgs(options);
@@ -312,14 +311,14 @@ export async function launchBrowser(start_page: string = 'about:blank', output?:
   browser.on('disconnected', () => console.log('instrumented browser session finished'))
   // instantiating starting pages
   const [page] = await browser.pages()
-  await instrument_fetch(page,
+  await instrument_fetch(root, page,
     output
     || (
       console.log("no output directory given use default output directory '/tmp/behavior_traces/default_browser/'"),
-      "/tmp/behavior_traces/default_browser/"))
+      "/tmp/behavior_traces/"))
   await page.goto(start_page)
 }
 
 if (typeof require != 'undefined' && require.main == module) {
-  launchBrowser();
+  launchBrowser('default');
 }
