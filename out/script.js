@@ -231,15 +231,15 @@ function instrument_basic(page) {
  * replace original response with interceptions added to the functions
  * @param page the page to instrument
  */
-function instrument_fetch(page, output, apply_babel = false) {
+function instrument_fetch(root, page, output, apply_babel = false) {
     return __awaiter(this, void 0, void 0, function* () {
-        page.on("popup", new_page => instrument_fetch(new_page, output, apply_babel));
+        page.on("popup", new_page => instrument_fetch(root, new_page, output, apply_babel));
         const client = yield page.target().createCDPSession();
         if (!fs.existsSync(output))
             fs.mkdirSync(output);
         //load dependency for inline scripts modification
         yield page.evaluateOnNewDocument(babel_js_src);
-        const file = fs.openSync(path_1.join(output, "" + Math.random()), 'w');
+        const file = fs.openSync(path_1.join(output, root, "browser", "" + Math.random()), 'w');
         yield page.exposeFunction("logger", function (data) {
             fs.appendFileSync(file, data + '\n', 'utf-8');
             fs.fdatasyncSync(file);
@@ -280,7 +280,7 @@ function instrument_fetch(page, output, apply_babel = false) {
     });
 }
 // Main
-function launchBrowser(start_page = 'about:blank', output) {
+function launchBrowser(root, start_page = 'about:blank', output) {
     return __awaiter(this, void 0, void 0, function* () {
         // instantiating browser
         const options = { headless: false, dumpio: true, pipe: false };
@@ -290,14 +290,14 @@ function launchBrowser(start_page = 'about:blank', output) {
         browser.on('disconnected', () => console.log('instrumented browser session finished'));
         // instantiating starting pages
         const [page] = yield browser.pages();
-        yield instrument_fetch(page, output
+        yield instrument_fetch(root, page, output
             || (console.log("no output directory given use default output directory '/tmp/behavior_traces/default_browser/'"),
-                "/tmp/behavior_traces/default_browser/"));
+                "/tmp/behavior_traces/"));
         yield page.goto(start_page);
     });
 }
 exports.launchBrowser = launchBrowser;
 if (typeof require != 'undefined' && require.main == module) {
-    launchBrowser();
+    launchBrowser('default');
 }
 //# sourceMappingURL=script.js.map
