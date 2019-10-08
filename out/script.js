@@ -292,12 +292,12 @@ function launchBrowser(root_path, start_page = 'about:blank', output) {
         const [page] = yield browser.pages();
         yield instrument_fetch(root_path, page, output
             || (console.log("no output directory given use default output directory '/tmp/behavior_traces/default_browser/'"),
-                "/tmp/behavior_traces/"));
+                "/tmp/behavior_traces/default/browser/"));
         yield page.goto(start_page);
     });
 }
 exports.launchBrowser = launchBrowser;
 if (typeof require != 'undefined' && require.main == module) {
-    launchBrowser(process.argv[1]);
+    launchBrowser(process.argv[1] || "");
 }
 //# sourceMappingURL=script.js.map
