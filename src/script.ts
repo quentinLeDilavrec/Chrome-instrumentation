@@ -315,10 +315,10 @@ export async function launchBrowser(root_path:string, start_page: string = 'abou
     output
     || (
       console.log("no output directory given use default output directory '/tmp/behavior_traces/default_browser/'"),
-      "/tmp/behavior_traces/"))
+      "/tmp/behavior_traces/default/browser/"))
   await page.goto(start_page)
 }
 
 if (typeof require != 'undefined' && require.main == module) {
-  launchBrowser(process.argv[1]);
+  launchBrowser(process.argv[1] || "");
 }
