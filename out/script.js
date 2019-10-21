@@ -14,9 +14,9 @@ const core_1 = require("@babel/core");
 const instrumentation_1 = require("./instrumentation");
 const path_1 = require("path");
 const babel_js_src = fs.readFileSync(path_1.join(__dirname, "../babel.js"), 'utf8');
-function _MO_instantiator(instrumenter_container_str, root_path = "") {
+function _MO_instantiator(instrumenter_container_str, common_path = "") {
     const binding = window['logger'];
-    window["global"] = {};
+    window["global"] = window["global"] || {};
     const replacer = function (depth = Number.MAX_SAFE_INTEGER) {
         let objects, stack, keys;
         return function (key, value) {
@@ -67,8 +67,10 @@ function _MO_instantiator(instrumenter_container_str, root_path = "") {
     };
     let log = [];
     const count = 2000;
-    const myCallPrinter = (call) => {
-        return '' + call[0].slice(root_path.length) + (call.length > 1 ? ' ' + JSON.stringify(call.slice(1), replacer(0)) : '');
+    const myCallPrinter = common_path.length > 0 ? (call) => {
+        return '' + call[0].slice(common_path.length) + (call.length > 1 ? ' ' + JSON.stringify(call.slice(1), replacer(0)) : '');
+    } : (call) => {
+        return '' + call[0] + (call.length > 1 ? ' ' + JSON.stringify(call.slice(1), replacer(0)) : '');
     };
     function flush() {
         if (log.length > 0) {
@@ -231,9 +233,9 @@ function instrument_basic(page) {
  * replace original response with interceptions added to the functions
  * @param page the page to instrument
  */
-function instrument_fetch(root_path, page, output, apply_babel = false) {
+function instrument_fetch(common_path, page, output, apply_babel = false) {
     return __awaiter(this, void 0, void 0, function* () {
-        page.on("popup", new_page => instrument_fetch(root_path.substr(-1) === '/' ? root_path : root_path + '/', new_page, output, apply_babel));
+        page.on("popup", new_page => instrument_fetch(common_path.substr(-1) === '/' ? common_path : common_path + '/', new_page, output, apply_babel));
         const client = yield page.target().createCDPSession();
         if (!fs.existsSync(output))
             fs.mkdirSync(output);
@@ -261,7 +263,7 @@ function instrument_fetch(root_path, page, output, apply_babel = false) {
                 console.log(e);
             }
         }));
-        yield page.evaluateOnNewDocument(_MO_instantiator, instrumentation_1.instrumenter_container.toString(), root_path);
+        yield page.evaluateOnNewDocument(_MO_instantiator, instrumentation_1.instrumenter_container.toString(), common_path);
         if (apply_babel) {
             yield client.send('Fetch.enable', { patterns: [{ resourceType: "Script", requestStage: "Response" }] });
             yield client.on('Fetch.requestPaused', ({ requestId, request, frameId, resourceType, responseErrorReason, responseStatusCode, responseHeaders, networkId }) => __awaiter(this, void 0, void 0, function* () {
@@ -280,7 +282,13 @@ function instrument_fetch(root_path, page, output, apply_babel = false) {
     });
 }
 // Main
-function launchBrowser(root_path, start_page = 'about:blank', output) {
+/**
+ *
+ * @param common_path prefix to remove from calls path
+ * @param start_page first page loaded on the instrumented browser
+ * @param output where the trace should go, use an absolute path to avoid troubles
+ */
+function launchBrowser(common_path, start_page = 'about:blank', output) {
     return __awaiter(this, void 0, void 0, function* () {
         // instantiating browser
         const options = { headless: false, dumpio: true, pipe: false };
@@ -290,7 +298,7 @@ function launchBrowser(root_path, start_page = 'about:blank', output) {
         browser.on('disconnected', () => console.log('instrumented browser session finished'));
         // instantiating starting pages
         const [page] = yield browser.pages();
-        yield instrument_fetch(root_path, page, output
+        yield instrument_fetch(common_path, page, output
             || (console.log("no output directory given use default output directory '/tmp/behavior_traces/default_browser/'"),
                 "/tmp/behavior_traces/default/browser/"));
         yield page.goto(start_page);
